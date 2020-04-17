@@ -1,7 +1,6 @@
 package my_tetris.view;
 
 import my_tetris.Direction;
-import my_tetris.Element;
 import my_tetris.Game;
 import my_tetris.events.GameEvent;
 import my_tetris.events.GameListener;
@@ -19,12 +18,9 @@ public class GamePanel extends JFrame{
 
     private final int NEXT_SHAPE_SPACE_WIDTH = 4;
 
-    private final int CELL_SIZE = 20;
+    private GlassField glassField = null;
 
-    private final Color EMPTY_CELL_COLOR = new Color(245, 245, 245);
-
-    private final Color CELL_BORDER_COLOR = new Color(131, 139, 131);
-
+    private NextShapeSpace nextShapeSpace = null;
 
     private Game game = null;
 
@@ -35,72 +31,10 @@ public class GamePanel extends JFrame{
 
         game = new Game();
         game.addGameListener(new GameObserver());
-
+        glassField = new GlassField(GLASS_HEIGHT, GLASS_WIDTH);
+        nextShapeSpace = new NextShapeSpace(NEXT_SHAPE_SPACE_HEIGHT, NEXT_SHAPE_SPACE_WIDTH);
         initComponents();
-
     }
-
-    private void createGlassSpace(){
-
-        glassPanel = new JPanel();
-        glassPanel.setLayout(new GridLayout(GLASS_HEIGHT, GLASS_WIDTH));
-
-        for (int row = 1; row <= GLASS_HEIGHT; row++)
-        {
-            for (int col = 1; col <= GLASS_WIDTH; col++)
-            {
-                JPanel cell = new JPanel();
-                cell.setPreferredSize(new Dimension(CELL_SIZE,CELL_SIZE));
-                cell.setBorder(BorderFactory.createLineBorder(CELL_BORDER_COLOR, 1));
-                cell.setBackground(EMPTY_CELL_COLOR);
-                glassPanel.add(cell);
-            }
-        }
-        content.add(glassPanel, BorderLayout.WEST);
-    }
-
-    private void createNextShapeSpace() {
-
-        nextShapeLabel = new JLabel("    Следующая фигура");
-        nextShapeLabel.setPreferredSize(new Dimension(150, 25));
-        leftSidePanel.add(nextShapeLabel);
-
-        nextShapePanel = new JPanel();
-        nextShapePanel.setLayout(new GridLayout(NEXT_SHAPE_SPACE_HEIGHT, NEXT_SHAPE_SPACE_WIDTH));
-        for (int row = 1; row <= NEXT_SHAPE_SPACE_HEIGHT; row++)
-        {
-            for (int col = 1; col <= NEXT_SHAPE_SPACE_WIDTH; col++)
-            {
-                JPanel cell = new JPanel();
-                cell.setPreferredSize(new Dimension(CELL_SIZE,CELL_SIZE));
-                cell.setBorder(BorderFactory.createLineBorder(CELL_BORDER_COLOR, 1));
-                cell.setBackground(EMPTY_CELL_COLOR);
-                nextShapePanel.add(cell);
-            }
-
-        }
-        leftSidePanel.add(nextShapePanel);
-    }
-
-    private JPanel getCell(JPanel panel, Point pos, int panelWidth) {
-
-        int index = 0;
-        Component widgets[] = panel.getComponents();
-        for(int i = widgets.length - 1; i >= 0; --i)
-        {
-            if(widgets[i] instanceof JPanel)
-            {
-                if(index == panelWidth * (pos.y) + panelWidth - 1 - pos.x)
-                {
-                    return (JPanel)widgets[i];
-                }
-                index++;
-            }
-        }
-
-        return null;
-    }
-
 
     private void initComponents() {
 
@@ -117,7 +51,7 @@ public class GamePanel extends JFrame{
         content.setPreferredSize(new Dimension(360,400));
         setResizable(false);
 
-        createGlassSpace();
+        content.add(glassField, BorderLayout.WEST);
 
         leftSidePanel = new JPanel();
         leftSidePanel.setPreferredSize(new Dimension(150, 380));
@@ -137,7 +71,11 @@ public class GamePanel extends JFrame{
         emptyPanel.setPreferredSize(new Dimension(150, 120));
         leftSidePanel.add(emptyPanel);
 
-        createNextShapeSpace();
+        nextShapeLabel = new JLabel("    Следующая фигура");
+        nextShapeLabel.setPreferredSize(new Dimension(150, 25));
+        leftSidePanel.add(nextShapeLabel);
+
+        leftSidePanel.add(nextShapeSpace);
 
         emptyPanel = new JPanel();
         emptyPanel.setPreferredSize(new Dimension(150, 90));
@@ -156,9 +94,6 @@ public class GamePanel extends JFrame{
         pack();
         setVisible(true);
         setFocusable(true);
-
-
-
     }
 
     private JPanel content;
@@ -166,8 +101,6 @@ public class GamePanel extends JFrame{
     private javax.swing.JButton startGameButton;
     private javax.swing.JLabel scoreLabel;
     private javax.swing.JLabel nextShapeLabel;
-    private javax.swing.JPanel glassPanel;
-    private javax.swing.JPanel nextShapePanel;
     private javax.swing.JTextField scoreField;
 
     //Слушает нажатие кнопок и по ним сообщает игре, как нужно переместить/повернуть фигуру
@@ -211,34 +144,10 @@ public class GamePanel extends JFrame{
         }
 
         @Override
-        public void glassContentChanged(GameEvent e) {
+        public void glassContentChanged(GameEvent e) { glassField.update(e.getGlassElements());}
 
-            for (Component widget : glassPanel.getComponents()) {
-
-                if (widget instanceof JPanel && widget.getBackground() != EMPTY_CELL_COLOR) {
-                    widget.setBackground(EMPTY_CELL_COLOR);
-                }
-            }
-
-            for (Component widget : nextShapePanel.getComponents()) {
-
-                if (widget instanceof JPanel && widget.getBackground() != EMPTY_CELL_COLOR) {
-                    widget.setBackground(EMPTY_CELL_COLOR);
-                }
-            }
-
-            for (Element tmp : e.getGlassElements()) {
-
-                getCell(glassPanel, new Point(tmp.getCol(), tmp.getRow()),
-                        GLASS_WIDTH).setBackground(tmp.getColor());
-            }
-
-            for (Element tmp : e.getNextActiveShape()) {
-
-                getCell(nextShapePanel, new Point(tmp.getCol(), tmp.getRow()),
-                        NEXT_SHAPE_SPACE_WIDTH).setBackground(tmp.getColor());
-            }
-        }
+        @Override
+        public void nextShapeChanged(GameEvent e) { nextShapeSpace.update(e.getNextActiveShape()); }
     }
 
 }

@@ -16,4 +16,6 @@ public interface GameListener {
     public void scoreChanged();
 
     public void glassContentChanged(GameEvent e);
+
+    public void nextShapeChanged(GameEvent e);
 }

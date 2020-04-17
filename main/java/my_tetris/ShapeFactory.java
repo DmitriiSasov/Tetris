@@ -8,6 +8,8 @@ package my_tetris;
 import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+
+import my_tetris.events.*;
 import my_tetris.general_game_objects.Shape;
 
 /**
@@ -127,7 +129,39 @@ public class ShapeFactory {
         ArrayList<Element> elements = shapeTemplates.get(calcNextShapeType());
         setColor(elements);
         nextShape = new Shape(elements);
+
+        var event = new ShapeFactoryEvent(this);
+        event.setNextShapeElements(elements);
+        fireNextShapeChanged(event);
+
         return createdShape;
+    }
+
+
+    //Сообщает игре о том, что следующая фигура поменялась
+    private ArrayList<ShapeFactoryListener> listeners = new ArrayList<>();
+
+    public void addShapeFactoryListener(ShapeFactoryListener l) {
+
+        if (!listeners.contains(l)) {
+
+            listeners.add(l);
+        }
+    }
+
+    public void removeShapeFactoryListener(ShapeFactoryListener l) {
+
+        listeners.remove(l);
+    }
+
+    private void fireNextShapeChanged(ShapeFactoryEvent e) {
+
+        for (ShapeFactoryListener l : listeners) {
+
+            GameEvent event = new GameEvent(this);
+            event.setNextActiveShape(e.getNextShapeElements());
+            l.nextShapeChanged(event);
+        }
     }
 }
 

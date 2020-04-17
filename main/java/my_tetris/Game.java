@@ -38,7 +38,8 @@ public class Game {
         score = 0;
         
         shapeFactory = new ShapeFactory();
-        
+        shapeFactory.addShapeFactoryListener(new ShapeFactoryObserver());
+
         glass.setShapeFactory(shapeFactory);
     }
     
@@ -109,6 +110,24 @@ public class Game {
 
     }
 
+    //Получает следующую фигуру
+    private class ShapeFactoryObserver implements ShapeFactoryListener {
+
+        @Override
+        public void nextShapeChanged(GameEvent e) {
+
+            GameEvent event = new GameEvent(this);
+            Shape nextActiveShape = glass.getShapeFactory().getNextShape();
+            ArrayList<Element> NextActiveShapeElements = new ArrayList<>();
+            for (int i = 0; i < nextActiveShape.elementsCount(); i++) {
+
+                NextActiveShapeElements.add(nextActiveShape.getElement(i));
+            }
+            event.setNextActiveShape(NextActiveShapeElements);
+            fireNextShapeChanged(event);
+        }
+
+    }
 
     //Получает очки от очищенного ряда
     private class HorizontalRowObserver implements HorizontalRowListener {
@@ -162,4 +181,11 @@ public class Game {
         }
     }
 
+    private void fireNextShapeChanged(GameEvent e) {
+
+        for (GameListener l: listeners) {
+
+            l.nextShapeChanged(e);
+        }
+    }
 }
